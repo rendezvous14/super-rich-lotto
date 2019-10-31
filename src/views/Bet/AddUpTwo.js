@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { Formik } from "formik";
+import * as yup from "yup";
 import {
   Button,
   Card,
@@ -25,7 +27,8 @@ class AddUpTwo extends Component {
     this.state = {
       collapse: true,
       fadeIn: true,
-      timeout: 300
+      timeout: 300,
+      data: []
     };
   }
 
@@ -39,14 +42,33 @@ class AddUpTwo extends Component {
     });
   }
 
+  // Initial Form
+  state = {
+    name: "",
+    age: 0,
+    address: "",
+    data: []
+  };
+
+  componentDidMount() {
+    this.setState({
+      data: [1, 2]
+    });
+  }
+
+  onSubmit = event => {
+    console.info(event);
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
   render() {
     return (
       <div className="animated fadeIn">
         <Form
-          action=""
-          method="post"
           className="form-horizontal"
           id="Add-up-two-1"
+          onSubmit={this.onSubmit}
         >
           <Row>
             <Col xs="12" md="3">
@@ -1594,7 +1616,7 @@ class AddUpTwo extends Component {
           <Card>
             <CardBody>
               <FormGroup row className="my-0">
-                <Col md="4" xs="12">
+                <Col md="3" xs="4">
                   <InputGroup>
                     <Input
                       type="email"
