@@ -39,29 +39,27 @@ export default {
     },
     {
       name: "ตั้งค่า",
-      url: "https://coreui.io/react/",
       icon: "cui-settings",
       class: "mt-auto",
-      attributes: { target: "_blank", rel: "noopener" },
       children: [
         {
           name: "เลข 2 ตัวบน",
-          url: "/add-up-two",
+          url: "/setting-up-two",
           icon: "cui-chevron-right"
         },
         {
           name: "เลข 2 ตัวล่าง",
-          url: "/add-down-two",
+          url: "/setting-down-two",
           icon: "cui-chevron-right"
         },
         {
           name: "เลข 3 ตัวบน",
-          url: "/add-up-three",
+          url: "/setting-up-three",
           icon: "cui-chevron-right"
         },
         {
           name: "เลข 3 ตัวโต๊ด",
-          url: "/add-shuf-three",
+          url: "/setting-shuf-three",
           icon: "cui-chevron-right"
         }
       ]

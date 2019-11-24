@@ -7,51 +7,46 @@ import {
   CardHeader,
   Badge,
   Label,
-  InputGroupAddon,
-  InputGroup,
-  Input,
   Button,
-  InputGroupText,
   Form
 } from "reactstrap";
 
-import axios from "axios";
-
-import ExtendedInput from "../Input";
+import API from "../Utils/API";
+import ExtendedInput from "../InputForConfigs";
 import Period from "../Utils/Period";
 
-class AddUpTwo extends Component {
-  state = {
-    collapse: true,
-    fadeIn: true,
-    timeout: 300,
-    configuration: [],
-    isLoading: false
-  };
+class AddUpTwoConfigs extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      collapse: true,
+      fadeIn: true,
+      timeout: 300,
+      configData: [],
+      isLoading: true
+    };
+  }
 
-  componentDidMount() {
-    axios
-      .get(
-        "https://tranquil-dusk-72376.herokuapp.com/order-up-two-configs",
-        {
-          params: {
-            period: Period()
-          }
-        },
-        {
-          headers: {
-            "Content-Type": "application/json"
-          }
+  async componentDidMount() {
+    try {
+      let configData = await API.get("/order-up-two-configs", {
+        params: {
+          period: Period()
         }
-      )
-      .then(response => {
-        console.log(response);
-        this.setState({
-          configuration: response.data.configs,
-          isLoading: false
-        });
-      })
-      .catch(error => this.setState({ error, isLoading: false }));
+      });
+      configData = configData.data.configs;
+      console.log(configData);
+      this.setState({
+        ...this.state,
+        ...{
+          isLoading: false,
+          configData
+        }
+      });
+    } catch (e) {
+      console.log(`Axios request failed: ${e}`);
+      this.setState({ e, isLoading: false });
+    }
   }
 
   toggle() {
@@ -66,60 +61,36 @@ class AddUpTwo extends Component {
 
   handleSubmit = event => {
     event.preventDefault();
-    const order = {
-      name: this.state.name
-    };
 
-    axios
-      .post(
-        "https://tranquil-dusk-72376.herokuapp.com/admin/order-up-two-configs",
-        {
-          order
-        }
-      )
-      .then(res => {
-        console.log(res);
-        console.log(res.data);
-      });
+    // let updateConfigData = API.post("/admin/order-up-two-configs", {
+    //   period: "2019-11-01",
+    //   configs: this.state.configData
+    // });
+    // respons = updateConfigData.data;
+    // console.log(respons);
   };
 
   render() {
-    const { configuration, isLoading } = this.state;
+    const { configData, isLoading } = this.state;
     return (
       <div className="animated fadeIn">
         {!isLoading ? (
           <Col xs="12" md="8">
             <Card>
               <CardHeader>
-                <strong>เลข 00 - 24</strong>
+                <strong>เลข 00 - 99</strong>
                 <div className="card-header-actions">
                   <Badge color="success" className="float-right">
-                    เลข 2 ตัวบน
+                    ตั้งค่าลิมิต - เลข 2 ตัวบน
                   </Badge>
                 </div>
               </CardHeader>
               <CardBody>
-                <AddBody configs={configuration}></AddBody>
+                <AddBody configs={configData}></AddBody>
               </CardBody>
               <CardBody>
                 <Form onSubmit={this.handleSubmit}>
                   <FormGroup row className="my-0">
-                    <Col xs="12" md="5">
-                      <InputGroup>
-                        <Input
-                          type="text"
-                          id="username"
-                          name="username"
-                          autoComplete="name"
-                          placeholder="กรอกชื่อลูกค้า"
-                        />
-                        <InputGroupAddon addonType="append">
-                          <InputGroupText>
-                            <i className="fa fa-user"></i>
-                          </InputGroupText>
-                        </InputGroupAddon>
-                      </InputGroup>
-                    </Col>
                     <Col xs="12" md="5">
                       <Button type="submit" color="success">
                         <i className="fa fa-dot-circle-o"></i> ยืนยัน
@@ -159,4 +130,4 @@ const AddBody = ({ configs }) =>
     );
   });
 
-export default AddUpTwo;
+export default AddUpTwoConfigs;

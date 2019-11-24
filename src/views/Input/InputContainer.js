@@ -1,13 +1,13 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React from "react";
+import PropTypes from "prop-types";
 
 class InputContainer extends React.Component {
   static propTypes = {
-    maxValue: PropTypes.number.isRequired,
+    maxValue: PropTypes.number.isRequired
   };
 
   state = {
-    show: false,
+    show: false
   };
 
   onChange = event => {
