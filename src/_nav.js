@@ -44,22 +44,22 @@ export default {
       children: [
         {
           name: "เลข 2 ตัวบน",
-          url: "/setting-up-two",
+          url: "/add-up-two-config",
           icon: "cui-chevron-right"
         },
         {
           name: "เลข 2 ตัวล่าง",
-          url: "/setting-down-two",
+          url: "/add-down-two-config",
           icon: "cui-chevron-right"
         },
         {
           name: "เลข 3 ตัวบน",
-          url: "/setting-up-three",
+          url: "/add-up-three-config",
           icon: "cui-chevron-right"
         },
         {
           name: "เลข 3 ตัวโต๊ด",
-          url: "/setting-shuf-three",
+          url: "/add-shuffle-three-config",
           icon: "cui-chevron-right"
         }
       ]

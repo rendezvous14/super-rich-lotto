@@ -1,11 +1,40 @@
 // Styles
 // CoreUI Icons Set
-@import '~@coreui/icons/css/coreui-icons.css';
+@import "~@coreui/icons/css/coreui-icons.css";
 // Import Flag Icons Set
-@import '~flag-icon-css/css/flag-icon.min.css';
+@import "~flag-icon-css/css/flag-icon.min.css";
 // Import Font Awesome Icons Set
-@import '~font-awesome/css/font-awesome.min.css';
+@import "~font-awesome/css/font-awesome.min.css";
 // Import Simple Line Icons Set
-@import '~simple-line-icons/css/simple-line-icons.css';
+@import "~simple-line-icons/css/simple-line-icons.css";
 // Import Main styles for this application
-@import './scss/style.scss';
+@import "./scss/style.scss";
+
+.my-custom-scrollbar {
+  position: relative;
+  height: 500px;
+  overflow: auto;
+}
+.table-wrapper-scroll-y {
+  display: block;
+}
+.table-header-color {
+  background-color: #ffc107;
+}
+.loader {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

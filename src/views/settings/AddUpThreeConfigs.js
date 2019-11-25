@@ -19,7 +19,7 @@ import {
 import API from "../Utils/API";
 import Period from "../Utils/Period";
 
-class AddUpTwoConfigs extends Component {
+class AddUpThreeConfigs extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -35,7 +35,7 @@ class AddUpTwoConfigs extends Component {
 
   async componentDidMount() {
     try {
-      let configData = await API.get("/order-up-two-configs", {
+      let configData = await API.get("/order-up-three-configs", {
         params: {
           period: Period()
         }
@@ -72,12 +72,12 @@ class AddUpTwoConfigs extends Component {
 
     const configs = [
       {
-        order_num: this.state.order_num.padStart(2, 0),
+        order_num: this.state.order_num.padStart(3, 0),
         limit: this.state.limit
       }
     ];
     try {
-      API.post("/admin/order-up-two-configs", {
+      API.post("/admin/order-up-three-configs", {
         period: Period(),
         configs
       }).then(res => {
@@ -119,7 +119,7 @@ class AddUpTwoConfigs extends Component {
     }
   };
 
-  ResetForm = event => {
+  ResetForm = () => {
     this.setState(
       {
         order_num: "",
@@ -140,10 +140,10 @@ class AddUpTwoConfigs extends Component {
             <Col xs="12" md="8">
               <Card>
                 <CardHeader>
-                  <strong>ตั้งค่าลิมิต - เลข 2 ตัวบน</strong>
+                  <strong>ตั้งค่าลิมิต - เลข 3 ตัวบน</strong>
                   <div className="card-header-actions">
-                    <Badge color="success" className="float-right">
-                      เลข 00 - 99
+                    <Badge color="danger" className="float-right">
+                      เลข 000 - 999
                     </Badge>
                   </div>
                 </CardHeader>
@@ -158,13 +158,15 @@ class AddUpTwoConfigs extends Component {
                           type="text"
                           autoComplete="off"
                           min={0}
-                          maxLength="2"
+                          maxLength="3"
                           id="order-num"
                           name="order-num"
                           value={this.state.order_num}
                           onChange={this.orderNumChange}
                         />
-                        <FormText color="muted">ใส่เลข 2 หลัก 00 - 99</FormText>
+                        <FormText color="muted">
+                          ใส่เลข 3 หลัก 000 - 999
+                        </FormText>
                       </Col>
                     </FormGroup>
                     <FormGroup row>
@@ -210,10 +212,11 @@ class AddUpTwoConfigs extends Component {
                 </CardFooter>
               </Card>
             </Col>
+
             <Col xs="12" md="8">
               <Card>
                 <CardHeader>
-                  <strong>แสดงผลการตั้งค่าลิมิต - เลข 2 ตัวบน</strong>
+                  <strong>แสดงผลการตั้งค่าลิมิต - เลข 3 ตัวบน</strong>
                 </CardHeader>
                 <CardBody>
                   <div className="table-wrapper-scroll-y my-custom-scrollbar">
@@ -256,4 +259,4 @@ const AddTable = ({ configs }) =>
     );
   });
 
-export default AddUpTwoConfigs;
+export default AddUpThreeConfigs;

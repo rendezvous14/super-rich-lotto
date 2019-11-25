@@ -130,7 +130,7 @@ class AddUpThree extends Component {
             </Card>
           </Col>
         ) : (
-          <p>Loading...</p>
+          <div className="loader"></div>
         )}
       </div>
     );

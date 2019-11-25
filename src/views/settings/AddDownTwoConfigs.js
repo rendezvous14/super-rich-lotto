@@ -19,7 +19,7 @@ import {
 import API from "../Utils/API";
 import Period from "../Utils/Period";
 
-class AddUpTwoConfigs extends Component {
+class AddDownTwoConfigs extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -35,7 +35,7 @@ class AddUpTwoConfigs extends Component {
 
   async componentDidMount() {
     try {
-      let configData = await API.get("/order-up-two-configs", {
+      let configData = await API.get("/order-down-two-configs", {
         params: {
           period: Period()
         }
@@ -77,7 +77,7 @@ class AddUpTwoConfigs extends Component {
       }
     ];
     try {
-      API.post("/admin/order-up-two-configs", {
+      API.post("/admin/order-down-two-configs", {
         period: Period(),
         configs
       }).then(res => {
@@ -140,7 +140,7 @@ class AddUpTwoConfigs extends Component {
             <Col xs="12" md="8">
               <Card>
                 <CardHeader>
-                  <strong>ตั้งค่าลิมิต - เลข 2 ตัวบน</strong>
+                  <strong>ตั้งค่าลิมิต - เลข 2 ตัวล่าง</strong>
                   <div className="card-header-actions">
                     <Badge color="success" className="float-right">
                       เลข 00 - 99
@@ -210,10 +210,11 @@ class AddUpTwoConfigs extends Component {
                 </CardFooter>
               </Card>
             </Col>
+
             <Col xs="12" md="8">
               <Card>
                 <CardHeader>
-                  <strong>แสดงผลการตั้งค่าลิมิต - เลข 2 ตัวบน</strong>
+                  <strong>แสดงผลการตั้งค่าลิมิต - เลข 2 ตัวล่าง</strong>
                 </CardHeader>
                 <CardBody>
                   <div className="table-wrapper-scroll-y my-custom-scrollbar">
@@ -256,4 +257,4 @@ const AddTable = ({ configs }) =>
     );
   });
 
-export default AddUpTwoConfigs;
+export default AddDownTwoConfigs;
