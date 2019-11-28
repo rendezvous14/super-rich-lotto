@@ -6,16 +6,16 @@ const AddUpThree = React.lazy(() => import("./views/Bet/AddUpThree"));
 const AddDownTwo = React.lazy(() => import("./views/Bet/AddDownTwo"));
 const AddShufThree = React.lazy(() => import("./views/Bet/AddShufThree"));
 const AddUpTwoConfigs = React.lazy(() =>
-  import("./views/settings/AddUpTwoConfigs")
+  import("./views/Settings/AddUpTwoConfigs")
 );
 const AddDownTwoConfigs = React.lazy(() =>
-  import("./views/settings/AddDownTwoConfigs")
+  import("./views/Settings/AddDownTwoConfigs")
 );
 const AddUpThreeConfigs = React.lazy(() =>
-  import("./views/settings/AddUpThreeConfigs")
+  import("./views/Settings/AddUpThreeConfigs")
 );
 const AddShuffleThreeConfigs = React.lazy(() =>
-  import("./views/settings/AddShuffleThreeConfigs")
+  import("./views/Settings/AddShuffleThreeConfigs")
 );
 const Users = React.lazy(() => import("./views/Users/Users"));
 const User = React.lazy(() => import("./views/Users/User"));
