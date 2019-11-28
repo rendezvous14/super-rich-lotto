@@ -1,29 +1,69 @@
 import React, { Component } from "react";
+
 import {
-  Button,
   Card,
   CardBody,
-  CardFooter,
-  CardHeader,
-  Col,
-  Form,
   FormGroup,
-  Input,
+  Col,
+  CardHeader,
+  CardFooter,
+  Badge,
   Label,
-  Row
+  Button,
+  Form,
+  FormText,
+  Input,
+  Table,
+  Row,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "reactstrap";
+
+import API from "../Utils/API";
+import Period from "../Utils/Period";
 
 class AddUpTwo extends Component {
   constructor(props) {
     super(props);
-
-    this.toggle = this.toggle.bind(this);
-    this.toggleFade = this.toggleFade.bind(this);
     this.state = {
       collapse: true,
       fadeIn: true,
-      timeout: 300
+      timeout: 300,
+      configData: [],
+      isLoading: true,
+      small: false,
+      medium: false,
+      order_num: "",
+      amount: ""
     };
+    this.toggleSmall = this.toggleSmall.bind(this);
+    this.toggleMedium = this.toggleMedium.bind(this);
+  }
+
+  async componentDidMount() {
+    try {
+      let configData = await API.get("/orders", {
+        params: {
+          period: Period(),
+          order_type: "shuffle_three"
+        }
+      });
+      configData = configData.data.orders;
+
+      console.log(configData);
+      this.setState({
+        ...this.state,
+        ...{
+          isLoading: false,
+          configData
+        }
+      });
+    } catch (event) {
+      console.log(`Axios request failed: ${event}`);
+      this.setState({ event, isLoading: false });
+    }
   }
 
   toggle() {
@@ -36,1595 +76,277 @@ class AddUpTwo extends Component {
     });
   }
 
+  toggleSmall() {
+    this.setState({
+      small: !this.state.small
+    });
+  }
+
+  toggleMedium() {
+    this.setState({
+      medium: !this.state.medium
+    });
+  }
+
+  handleSubmit = event => {
+    event.preventDefault();
+    if (
+      !this.state.amount ||
+      !this.state.order_num ||
+      Number(this.state.amount) === 0
+    ) {
+      this.setState({
+        medium: true
+      });
+    } else {
+      var inputOrderNum = this.state.order_num.padStart(3, 0);
+      var inputAmount = this.state.amount;
+      const selectedOrder = this.state.configData.find(
+        ({ order_num }) => order_num === inputOrderNum
+      );
+      if (selectedOrder) {
+        var configRemaining = selectedOrder.remaining_amount;
+
+        console.log(`input amount = ${inputAmount}`);
+        console.log(`config remaining = ${configRemaining}`);
+
+        if (inputAmount > configRemaining) {
+          this.setState({
+            small: true
+          });
+        } else {
+          const orders = [
+            {
+              order_num: inputOrderNum,
+              amount: inputAmount
+            }
+          ];
+          try {
+            API.post("/orders", {
+              period: Period(),
+              order_type: "shuffle_three",
+              orders
+            }).then(res => {
+              console.log(res);
+              console.log(res.data);
+              window.location.reload();
+            });
+          } catch (event) {
+            console.log(`Axios request failed: ${event}`);
+            this.setState({ event, isLoading: false });
+          }
+        }
+      }
+    }
+  };
+
+  orderNumChange = event => {
+    const re1 = /^[0-9\b]+$/;
+    if (event.target.value === "" || re1.test(event.target.value)) {
+      this.setState(
+        {
+          order_num: event.target.value
+        },
+        () => {
+          console.log(this.state.order_num);
+        }
+      );
+    }
+  };
+
+  amountChange = event => {
+    const re2 = /^[0-9\b-]+$/;
+    if (event.target.value === "" || re2.test(event.target.value)) {
+      this.setState(
+        {
+          amount: event.target.value
+        },
+        () => {
+          console.log(this.state.amount);
+        }
+      );
+    }
+  };
+
+  ResetForm = event => {
+    this.setState(
+      {
+        order_num: "",
+        amount: ""
+      },
+      () => {
+        console.log("ล้างค่า");
+      }
+    );
+  };
+
+  onDismiss() {
+    this.setState({ visible: true });
+  }
   render() {
+    const { configData, isLoading } = this.state;
     return (
       <div className="animated fadeIn">
-        <Row>
-          <Col xs="12" md="3">
-            <Card>
-              <CardHeader>
-                <strong>เลข 00 - 24</strong>
-              </CardHeader>
-              <CardBody>
-                <Form
-                  action=""
-                  method="post"
-                  className="form-horizontal"
-                  id="Add-up-two-1"
+        {!isLoading ? (
+          <Row>
+            <Col xs="12" md="8">
+              <Card>
+                <CardHeader>
+                  <strong>เพิ่มเลข 3 ตัวโต๊ด</strong>
+                  <div className="card-header-actions">
+                    <Badge color="success" className="float-right">
+                      เลข 000 - 999
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  <Form>
+                    <FormGroup row>
+                      <Col xs="4" md="3">
+                        <Label htmlFor="text-input">เลขหลัก</Label>
+                      </Col>
+                      <Col xs="8" md="5">
+                        <Input
+                          type="text"
+                          autoComplete="off"
+                          min={0}
+                          maxLength="3"
+                          id="order-num"
+                          name="order-num"
+                          value={this.state.order_num}
+                          onChange={this.orderNumChange}
+                        />
+                        <FormText color="muted">
+                          ใส่เลข 3 หลัก 000 - 999
+                        </FormText>
+                      </Col>
+                    </FormGroup>
+                    <FormGroup row>
+                      <Col xs="4" md="3">
+                        <Label htmlFor="text-input">จำนวน</Label>
+                      </Col>
+                      <Col xs="8" md="5">
+                        <Input
+                          type="text"
+                          autoComplete="off"
+                          min={0}
+                          max="1000000"
+                          maxLength="7"
+                          id="amount"
+                          name="amount"
+                          value={this.state.amount}
+                          onChange={this.amountChange}
+                        />
+                        <FormText color="muted">ไม่เกิน 1000000</FormText>
+                      </Col>
+                    </FormGroup>
+                  </Form>
+                </CardBody>
+                <CardFooter>
+                  <Form onSubmit={this.handleSubmit}>
+                    <FormGroup row className="my-0">
+                      <Col xs="12" md="5">
+                        <Button type="submit" color="success">
+                          <i className="cui-circle-check"></i>
+                          &nbsp;ยืนยัน
+                        </Button>{" "}
+                        <Button
+                          type="reset"
+                          color="danger"
+                          onClick={this.ResetForm}
+                        >
+                          <i className="fa fa-ban"></i>&nbsp;ล้างค่า
+                        </Button>
+                      </Col>
+                    </FormGroup>
+                  </Form>
+                </CardFooter>
+                <Modal
+                  isOpen={this.state.small}
+                  toggle={this.toggleSmall}
+                  className={"modal-danger " + this.props.className}
                 >
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 00</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 01</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 02</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 03</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 04</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 05</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 06</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 07</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 08</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 09</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 10</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 11</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 12</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 13</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 14</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 15</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 16</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 17</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 18</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 19</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 20</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 21</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 22</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 23</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 24</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <CardFooter>
-                    <Button type="submit" color="success">
-                      <i className="fa fa-dot-circle-o"></i> เพิ่ม
+                  <ModalHeader toggle={this.toggleSmall}>
+                    *** คำเตือน ***
+                  </ModalHeader>
+                  <ModalBody>
+                    เกินลิมิตที่ตั้งไว้! กรุณาใส่ค่าใหม่อีกครั้ง
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button color="danger" onClick={this.toggleSmall}>
+                      ลองใหม่อีกครั้ง
                     </Button>
-                    <Button type="reset" color="danger">
-                      <i className="fa fa-ban"></i> ล้าง
+                  </ModalFooter>
+                </Modal>
+                <Modal
+                  isOpen={this.state.medium}
+                  toggle={this.toggleMedium}
+                  className={"modal-danger " + this.props.className}
+                >
+                  <ModalHeader toggle={this.toggleMedium}>
+                    *** คำเตือน ***
+                  </ModalHeader>
+                  <ModalBody>กรุณาใส่ค่า เลขหลัก และ จำนวน</ModalBody>
+                  <ModalFooter>
+                    <Button color="danger" onClick={this.toggleMedium}>
+                      ลองใหม่อีกครั้ง
                     </Button>
-                  </CardFooter>
-                </Form>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" md="3">
-            <Card>
-              <CardHeader>
-                <strong>เลข 25 - 49</strong>
-              </CardHeader>
-              <CardBody>
-                <Form action="" method="post" className="form-horizontal">
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 25</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 26</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 27</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 28</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 29</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 30</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 31</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 32</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 33</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 34</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 35</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 36</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 37</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 38</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 39</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 40</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 41</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 42</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 43</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 44</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 45</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 46</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 47</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 48</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 49</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <CardFooter>
-                    <Button type="submit" color="success">
-                      <i className="fa fa-dot-circle-o"></i> เพิ่ม
-                    </Button>
-                    <Button type="reset" color="danger">
-                      <i className="fa fa-ban"></i> ล้าง
-                    </Button>
-                  </CardFooter>
-                </Form>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" md="3">
-            <Card>
-              <CardHeader>
-                <strong>เลข 50 - 74</strong>
-              </CardHeader>
-              <CardBody>
-                <Form action="" method="post" className="form-horizontal">
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 50</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 51</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 52</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 53</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 54</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 55</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 56</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 57</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 58</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 59</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 60</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 61</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 62</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 63</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 64</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 65</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 66</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 67</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 68</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 69</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 70</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 71</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 72</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 73</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 74</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <CardFooter>
-                    <Button type="submit" color="success">
-                      <i className="fa fa-dot-circle-o"></i> เพิ่ม
-                    </Button>
-                    <Button type="reset" color="danger">
-                      <i className="fa fa-ban"></i> ล้าง
-                    </Button>
-                  </CardFooter>
-                </Form>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" md="3">
-            <Card>
-              <CardHeader>
-                <strong>เลข 75 - 99</strong>
-              </CardHeader>
-              <CardBody>
-                <Form action="" method="post" className="form-horizontal">
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 75</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 76</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 77</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 78</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 79</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 80</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 81</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 82</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 83</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 84</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 85</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 86</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 87</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 88</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 89</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 90</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 91</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 92</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 93</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 94</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 95</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 96</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 97</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 98</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <FormGroup row>
-                    <Col md="4">
-                      <Label htmlFor="text-input">เลข 99</Label>
-                    </Col>
-                    <Col xs="12" md="8">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="99999"
-                        id="text-input"
-                        name="text-input"
-                        placeholder="0"
-                      />
-                    </Col>
-                  </FormGroup>
-                  <CardFooter>
-                    <Button type="submit" color="success">
-                      <i className="fa fa-dot-circle-o"></i> เพิ่ม
-                    </Button>
-                    <Button type="reset" color="danger">
-                      <i className="fa fa-ban"></i> ล้าง
-                    </Button>
-                  </CardFooter>
-                </Form>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
+                  </ModalFooter>
+                </Modal>
+              </Card>
+            </Col>
+            <Col xs="12" md="8">
+              <Card>
+                <CardHeader>
+                  <strong>ตารางแสดงผลค่าที่รับได้</strong>
+                </CardHeader>
+                <CardBody>
+                  <div className="table-wrapper-scroll-y my-custom-scrollbar">
+                    <Table responsive striped>
+                      <thead>
+                        <tr className="table-header-color-orders">
+                          <th>
+                            <strong>เลขหลัก</strong>
+                          </th>
+                          <th>
+                            <strong>จำนวนลิมิต</strong>
+                          </th>
+                          <th>
+                            <strong>รับมาแล้วทั้งหมด</strong>
+                          </th>
+                          <th>
+                            <strong>ยังรับได้อีก</strong>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <AddTable configs={configData}></AddTable>
+                      </tbody>
+                    </Table>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        ) : (
+          <div className="loader"></div>
+        )}
       </div>
     );
   }
 }
+
+const AddTable = ({ configs }) =>
+  configs.map((config, index) => {
+    const { order_num, limit, amount, remaining_amount } = config;
+    return (
+      <tr key={index}>
+        <td>เลข {order_num}</td>
+        <td>{limit}</td>
+        <td>{amount}</td>
+        <td>{remaining_amount}</td>
+      </tr>
+    );
+  });
 
 export default AddUpTwo;
