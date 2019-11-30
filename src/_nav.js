@@ -6,61 +6,78 @@ export default {
       icon: "cui-dashboard"
     },
     {
-      name: "เพิ่มเลขท้าย 2 ตัว",
+      name: "เพิ่มเลขท้าย",
       icon: "cui-note",
       children: [
         {
           name: "เลข 2 ตัวบน",
-          url: "/add-up-two",
-          icon: "cui-chevron-right"
+          url: "/add-up-two"
         },
         {
           name: "เลข 2 ตัวล่าง",
-          url: "/add-down-two",
-          icon: "cui-chevron-right"
-        }
-      ]
-    },
-    {
-      name: "เพิ่มเลขท้าย 3 ตัว",
-      icon: "cui-note",
-      children: [
+          url: "/add-down-two"
+        },
         {
           name: "เลข 3 ตัวบน",
-          url: "/add-up-three",
-          icon: "cui-chevron-right"
+          url: "/add-up-three"
         },
         {
           name: "เลข 3 ตัวโต๊ด",
-          url: "/add-shuf-three",
-          icon: "cui-chevron-right"
+          url: "/add-shuf-three"
         }
       ]
     },
     {
-      name: "ตั้งค่า",
-      icon: "cui-settings",
+      name: "ส่งต่อ",
+      icon: "cui-people",
       class: "mt-auto",
       children: [
         {
           name: "เลข 2 ตัวบน",
-          url: "/add-up-two-config",
-          icon: "cui-chevron-right"
+          url: "/add-ext-up-two"
         },
         {
           name: "เลข 2 ตัวล่าง",
-          url: "/add-down-two-config",
-          icon: "cui-chevron-right"
+          url: "/add-ext-down-two"
         },
         {
           name: "เลข 3 ตัวบน",
-          url: "/add-up-three-config",
-          icon: "cui-chevron-right"
+          url: "/add-ext-up-three"
         },
         {
           name: "เลข 3 ตัวโต๊ด",
-          url: "/add-shuffle-three-config",
-          icon: "cui-chevron-right"
+          url: "/add-ext-shuf-three"
+        }
+      ]
+    },
+    {
+      name: "",
+      attributes: { disabled: true }
+    },
+    {
+      divider: true
+    },
+    {
+      name: "ตั้งค่าลิมิต",
+      icon: "cui-settings",
+      class: "mt-auto",
+      variant: "success",
+      children: [
+        {
+          name: "เลข 2 ตัวบน",
+          url: "/add-up-two-config"
+        },
+        {
+          name: "เลข 2 ตัวล่าง",
+          url: "/add-down-two-config"
+        },
+        {
+          name: "เลข 3 ตัวบน",
+          url: "/add-up-three-config"
+        },
+        {
+          name: "เลข 3 ตัวโต๊ด",
+          url: "/add-shuffle-three-config"
         }
       ]
     }

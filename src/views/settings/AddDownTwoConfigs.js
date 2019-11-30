@@ -137,7 +137,7 @@ class AddDownTwoConfigs extends Component {
       <div className="animated fadeIn">
         {!isLoading ? (
           <Row>
-            <Col xs="12" md="8">
+            <Col xs="12" md="12">
               <Card>
                 <CardHeader>
                   <strong>ตั้งค่าลิมิต - เลข 2 ตัวล่าง</strong>
@@ -177,7 +177,7 @@ class AddDownTwoConfigs extends Component {
                           type="text"
                           autoComplete="off"
                           min={0}
-                          max="1000000"
+                          max="999999"
                           maxLength="7"
                           id="amount"
                           name="amount"
@@ -211,7 +211,7 @@ class AddDownTwoConfigs extends Component {
               </Card>
             </Col>
 
-            <Col xs="12" md="8">
+            <Col xs="12" md="12">
               <Card>
                 <CardHeader>
                   <strong>แสดงผลการตั้งค่าลิมิต - เลข 2 ตัวล่าง</strong>
@@ -247,14 +247,16 @@ class AddDownTwoConfigs extends Component {
 }
 
 const AddTable = ({ configs }) =>
-  configs.map((config, index) => {
-    const { order_num, limit } = config;
-    return (
-      <tr key={index}>
-        <td>เลข {order_num}</td>
-        <td>{limit}</td>
-      </tr>
-    );
-  });
+  configs
+    .filter(config => config.limit !== 0)
+    .map((config, index) => {
+      const { order_num, limit } = config;
+      return (
+        <tr key={index}>
+          <td>เลข {order_num}</td>
+          <td>{limit}</td>
+        </tr>
+      );
+    });
 
 export default AddDownTwoConfigs;

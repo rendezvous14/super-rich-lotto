@@ -189,7 +189,7 @@ class AddDownTwo extends Component {
       <div className="animated fadeIn">
         {!isLoading ? (
           <Row>
-            <Col xs="12" md="8">
+            <Col xs="12" md="12">
               <Card>
                 <CardHeader>
                   <strong>เพิ่ม เลข 2 ตัวล่าง</strong>
@@ -228,7 +228,7 @@ class AddDownTwo extends Component {
                           type="text"
                           autoComplete="off"
                           min={0}
-                          max="1000000"
+                          max="999999"
                           maxLength="7"
                           id="amount"
                           name="amount"
@@ -293,7 +293,7 @@ class AddDownTwo extends Component {
                 </Modal>
               </Card>
             </Col>
-            <Col xs="12" md="8">
+            <Col xs="12" md="12">
               <Card>
                 <CardHeader>
                   <strong>ตารางแสดงผลค่าที่รับได้</strong>
@@ -335,16 +335,18 @@ class AddDownTwo extends Component {
 }
 
 const AddTable = ({ configs }) =>
-  configs.map((config, index) => {
-    const { order_num, limit, amount, remaining_amount } = config;
-    return (
-      <tr key={index}>
-        <td>เลข {order_num}</td>
-        <td>{limit}</td>
-        <td>{amount}</td>
-        <td>{remaining_amount}</td>
-      </tr>
-    );
-  });
+  configs
+    .filter(config => config.limit !== 0)
+    .map((config, index) => {
+      const { order_num, limit, amount, remaining_amount } = config;
+      return (
+        <tr key={index}>
+          <td>เลข {order_num}</td>
+          <td>{limit}</td>
+          <td>{amount}</td>
+          <td>{remaining_amount}</td>
+        </tr>
+      );
+    });
 
 export default AddDownTwo;
