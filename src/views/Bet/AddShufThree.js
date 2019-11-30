@@ -101,16 +101,24 @@ class AddUpTwo extends Component {
     } else {
       var inputOrderNum = this.state.order_num.padStart(3, 0);
       var inputAmount = this.state.amount;
+      var absInputAmount = Math.abs(inputAmount);
       const selectedOrder = this.state.configData.find(
         ({ order_num }) => order_num === inputOrderNum
       );
       if (selectedOrder) {
+        var configAmount = selectedOrder.amount;
         var configRemaining = selectedOrder.remaining_amount;
 
         console.log(`input amount = ${inputAmount}`);
+        console.log(`config amount = ${configAmount}`);
         console.log(`config remaining = ${configRemaining}`);
 
-        if (inputAmount > configRemaining) {
+        if (inputAmount < 0 && absInputAmount > configAmount) {
+          // detect negative value
+          this.setState({
+            small: true
+          });
+        } else if (inputAmount > configRemaining) {
           this.setState({
             small: true
           });

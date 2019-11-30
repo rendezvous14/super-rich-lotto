@@ -13,7 +13,11 @@ import {
   FormText,
   Input,
   Table,
-  Row
+  Row,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "reactstrap";
 
 import API from "../Utils/API";
@@ -29,8 +33,10 @@ class AddDownTwoConfigs extends Component {
       configData: [],
       isLoading: true,
       order_num: "",
-      limit: ""
+      limit: "",
+      medium: false
     };
+    this.toggleMedium = this.toggleMedium.bind(this);
   }
 
   async componentDidMount() {
@@ -67,27 +73,38 @@ class AddDownTwoConfigs extends Component {
     });
   }
 
+  toggleMedium() {
+    this.setState({
+      medium: !this.state.medium
+    });
+  }
+
   handleSubmit = event => {
     event.preventDefault();
-
-    const configs = [
-      {
-        order_num: this.state.order_num.padStart(2, 0),
-        limit: this.state.limit
-      }
-    ];
-    try {
-      API.post("/admin/order-down-two-configs", {
-        period: Period(),
-        configs
-      }).then(res => {
-        console.log(res);
-        console.log(res.data);
-        window.location.reload();
+    if (!this.state.limit || !this.state.order_num) {
+      this.setState({
+        medium: true
       });
-    } catch (event) {
-      console.log(`Axios request failed: ${event}`);
-      this.setState({ event, isLoading: false });
+    } else {
+      const configs = [
+        {
+          order_num: this.state.order_num.padStart(2, 0),
+          limit: this.state.limit
+        }
+      ];
+      try {
+        API.post("/admin/order-down-two-configs", {
+          period: Period(),
+          configs
+        }).then(res => {
+          console.log(res);
+          console.log(res.data);
+          window.location.reload();
+        });
+      } catch (event) {
+        console.log(`Axios request failed: ${event}`);
+        this.setState({ event, isLoading: false });
+      }
     }
   };
 
@@ -208,6 +225,21 @@ class AddDownTwoConfigs extends Component {
                     </FormGroup>
                   </Form>
                 </CardFooter>
+                <Modal
+                  isOpen={this.state.medium}
+                  toggle={this.toggleMedium}
+                  className={"modal-danger " + this.props.className}
+                >
+                  <ModalHeader toggle={this.toggleMedium}>
+                    *** คำเตือน ***
+                  </ModalHeader>
+                  <ModalBody>กรุณาใส่ค่า เลขหลัก และ จำนวน</ModalBody>
+                  <ModalFooter>
+                    <Button color="danger" onClick={this.toggleMedium}>
+                      ลองใหม่อีกครั้ง
+                    </Button>
+                  </ModalFooter>
+                </Modal>
               </Card>
             </Col>
 
