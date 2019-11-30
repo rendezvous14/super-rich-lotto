@@ -27,12 +27,14 @@ const AddShuffleThreeConfigs = React.lazy(() =>
 const AddUpThreeConfigs = React.lazy(() =>
   import("./views/settings/AddUpThreeConfigs")
 );
+const Favicon = React.lazy(() => import("./assets/favicon/favicon.ico"));
 
 const Users = React.lazy(() => import("./views/Users/Users"));
 const User = React.lazy(() => import("./views/Users/User"));
 
 const routes = [
   { path: "/", exact: true, name: "หน้าแรก" },
+  { path: "/favicon.ico", name: "หน้าแรก", component: Favicon },
   { path: "/dashboard", name: "รายงาน", component: Dashboard },
   { path: "/add-up-two", name: "เพิ่มเลข 2 ตัวบน", component: AddUpTwo },
   { path: "/add-down-two", name: "เพิ่มเลข 2 ตัวล่าง", component: AddDownTwo },
