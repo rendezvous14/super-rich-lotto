@@ -1,10 +1,10 @@
 export default {
   items: [
-    {
-      name: "หน้าแรก",
-      url: "/dashboard",
-      icon: "cui-dashboard"
-    },
+    // {
+    //   name: "หน้าแรก",
+    //   url: "/dashboard",
+    //   icon: "cui-dashboard"
+    // },
     {
       name: "เพิ่มเลขท้าย",
       icon: "cui-note",
